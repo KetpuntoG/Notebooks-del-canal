@@ -6,16 +6,23 @@ import operator
 # Input parameters. Feel free to change them.
 L = 100                                         # Limit value
 objs = [60, 35, 23, 55, 70, 13]                 # weights of the items
-capas = 5                                       # number of layers
+layers = 5                                       # number of layers
 initial = 0                                     # inizialization value
-methods = ['COBYLA','SLSQP','BFGS']             # methods that you want to use
+methods = ['COBYLA']                            # list of methods that you want to use
 # See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize for available methods
 
 n = len(objs) 
 gamma = 2 / (n*L)  
 
+"""
+Clarification: (2*pi)/(n*L) appears on the paper
+In this case there is no pi for how gate R is constructed.
+To rotate pi degrees, we write z ** 1, 
+so intuitively, we have to divide by pi.
+
+"""
 class ParametrizedGate(cirq.Gate):
-    
+
     def _decompose_(self, qs):        
         for i in range(n):
             Rz = cirq.Z(qs[n]) ** (gamma * objs[i])
@@ -33,7 +40,7 @@ def ansatz(params):
     qs = cirq.LineQubit.range(n + 2)
     ansatz = cirq.Circuit()
     
-    for j in range(capas):
+    for j in range(layers):
         
         ansatz.append([cirq.X(qs[i]) ** params[i + 2*j*n] for i in range(n)])
         ansatz.append([cirq.CX(qs[aux[0]], qs[aux[1]]) 
@@ -76,7 +83,7 @@ def expected_values(params):
     
 def solution(method,n):
     
-    initial_params = np.array([initial]*(2*capas*n))
+    initial_params = np.array([initial]*(2*layers*n))
     minimum = scipy.optimize.minimize(expected_values,
                                       initial_params, method=method)
     final = cirq.Circuit()
